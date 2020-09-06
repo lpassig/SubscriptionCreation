@@ -68,7 +68,7 @@ Write-Host "Managedby : " $Request.Body.managedby
 ##
 #
 
-$ProjectName = $Request.Body.projectname.ToLower()
+[String]$ProjectName = $Request.Body.projectname.Replace(' ', '').ToLower()
 
 If($Request.Body.environment -like "Production"){
     $Environment = "prod"

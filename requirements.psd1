@@ -3,4 +3,5 @@
 #
 @{
     'Az' = '4.*'
+    'Az.Subscription' = '0.7.3'
 }

@@ -21,18 +21,21 @@ param($Request, $TriggerMetadata)
 # Write to the Azure Functions log stream.
 Write-Host "PowerShell HTTP trigger function processed a request."
 
-### Variables ###
+#
+##
+###    Variables 
+##
+#
 
 # Shortname of your organization/company
 [String]$OrganizationName = 'company'
 
-$Request.Body
-
+# Authenticate and log into Azure 
 if ($env:MSI_SECRET -and (Get-Module -ListAvailable Az.Accounts)) {
     Connect-AzAccount -Identity
 }
 
-# List all variables 
+# List/Output all incoming variables
 
 Write-Host "Cost Center: " $Request.Body.costcenter
 Write-Host "Compliance: " $Request.Body.compliance
@@ -45,7 +48,11 @@ Write-Host "ExternalPartner: " $Request.Body.partner
 Write-Host "Requestor: " $Request.Body.owner
 Write-Host "Managedby : " $Request.Body.managedby
 
-### Create Azure Subscription for Bootstrapping ###
+#
+##
+###    Create Azure Subscription for Bootstrapping 
+##
+#
 
 $ProjectName = $Request.Body.projectname.ToLower()
 
@@ -77,11 +84,6 @@ else{
     $OfferType = "MS-AZR-0148P"
 }
 
-$ProjectName
-$OfferType
-$SubscriptionName
-$Environment
-
 # Get Object ID of the Managed Service Identity/Service Principal  
 $EnrollmentId = (Get-AzEnrollmentAccount).ObjectId
 
@@ -91,11 +93,11 @@ New-AzSubscription -OfferType $OfferType -Name $SubscriptionName -EnrollmentAcco
 # Wait for the subscription to be created 
 Start-Sleep -Seconds 30
 
-
-
-###    Move Azure Subscription to Management Group ###
-
-
+#
+##
+###    Move Azure Subscription to Management Group
+##
+#
 
 # Get created subscription  
 $Subscription = Get-AzSubscription -SubscriptionName $SubscriptionName
@@ -106,10 +108,13 @@ New-AzManagementGroupSubscription -GroupName $Environment -SubscriptionId $Subsc
 # Wait for the subscription to be moved 
 Start-Sleep -Seconds 10
 
+#
+##
+###    Define subscription tags
+##
+#
 
-### Define subscription tags ###
-
-
+# Define Naming for Tags
 $company_costcenter = "$OrganizationName"+"_costcenter"
 $company_managedby = "$OrganizationName"+"_managedby"
 $company_complianceLevel = "$OrganizationName"+"_complianceLevel"
@@ -122,6 +127,7 @@ $company_reviewdate = "$OrganizationName"+"_reviewdate"
 $company_maintenancewindow =  "$OrganizationName"+"_maintenancewindow"
 $company_external_partner = "$OrganizationName"+"_external_partner"
 
+# Define Tag Table 
 If($Request.Body.partner -like ""){
 $tags = @{
     "$company_costcenter"=$Request.Body.costcenter;
@@ -152,12 +158,16 @@ $tags = @{
     }    
 }
 
-# Assign initial subscription tags
+#
+##
+###    Assign initial subscription tags
+##
+#
 
 $subid = $subscription.Id
+# Assign Tags
 New-AzTag -ResourceId "/subscriptions/$subid" -Tag $tags
 
-#>
 # Associate values to output bindings by calling 'Push-OutputBinding'.
 Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
     StatusCode = [HttpStatusCode]::OK

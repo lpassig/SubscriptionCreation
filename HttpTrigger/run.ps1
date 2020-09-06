@@ -31,6 +31,9 @@ if ($env:MSI_SECRET -and (Get-Module -ListAvailable Az.Accounts)) {
     Connect-AzAccount -Identity
 }
 
+Write-Host $Request.Body
+Write-Host "$Request"
+
 
 <#
     Create Azure Subscription for Bootstrapping 
@@ -38,20 +41,20 @@ if ($env:MSI_SECRET -and (Get-Module -ListAvailable Az.Accounts)) {
 
 #$AzureContext = Get-AzSubscription -SubscriptionId $connection.SubscriptionID
 
-$OfferType = "MS-AZR-0148P"
+# $OfferType = "MS-AZR-0148P"
 #MS-AZR-0017P für Produktivsubscriptions
 #MS-AZR-0148P für Dev/Test Subscriptions 
 
 #Anzeigen der berechtigten Accounts
-$EnrollmentId = (Get-AzEnrollmentAccount).ObjectId
+#$EnrollmentId = (Get-AzEnrollmentAccount).ObjectId
 
-New-AzSubscription -OfferType $OfferType -Name $SubscriptionName -EnrollmentAccountObjectId $EnrollmentId -OwnerSignInName $OwnerUPN1,$OwnerUPN2
+# New-AzSubscription -OfferType $OfferType -Name $SubscriptionName -EnrollmentAccountObjectId $EnrollmentId -OwnerSignInName $OwnerUPN1,$OwnerUPN2
 
 <#
     Move Azure Subscription to Management Group  
 #>
 
-New-AzManagementGroupSubscription -GroupName 'Contoso' -SubscriptionId '12345678-1234-1234-1234-123456789012'
+#New-AzManagementGroupSubscription -GroupName 'Contoso' -SubscriptionId '12345678-1234-1234-1234-123456789012'
 
 
 # Associate values to output bindings by calling 'Push-OutputBinding'.

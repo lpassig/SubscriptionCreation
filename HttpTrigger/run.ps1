@@ -2,8 +2,8 @@ using namespace System.Net
 <#
 .NOTES
 ## General Advice ##
-Be aware that the mail send will most certainly go into your SPAM folder as fist!!! 
-Be aware that this is a version 0.1 not following all Powershell best practices!
+
+!!! Be aware that this is a version 0.1 not following all Powershell best practices!!!
 
 Function Version: ~2 
 PowerShell Version: PowerShell Core 6

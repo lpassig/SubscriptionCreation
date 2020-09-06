@@ -35,6 +35,11 @@ if ($env:MSI_SECRET -and (Get-Module -ListAvailable Az.Accounts)) {
     Connect-AzAccount -Identity
 }
 
+# Check for module and install if needed
+if(!(Get-Module -ListAvailable Az.Subscription)){
+    Install-Module Az.Subscription -AllowPrerelease -Force
+}
+
 # List/Output all incoming variables
 
 Write-Host "Cost Center: " $Request.Body.costcenter
@@ -88,10 +93,13 @@ else{
 $EnrollmentId = (Get-AzEnrollmentAccount).ObjectId
 
 # Create Subscription 
-New-AzSubscription -OfferType $OfferType -Name $SubscriptionName -EnrollmentAccountObjectId $EnrollmentId -OwnerSignInName $Request.Body.owner
+$NewSubscription = New-AzSubscription -OfferType $OfferType -Name $SubscriptionName -EnrollmentAccountObjectId $EnrollmentId -OwnerSignInName $Request.Body.owner
 
 # Wait for the subscription to be created 
-Start-Sleep -Seconds 30
+Start-Sleep -Seconds 10
+
+#Log Subscription Details
+Write-Output "New subscription:" $NewSubscription | ConvertTo-Json | Write-Output
 
 #
 ##
@@ -100,7 +108,28 @@ Start-Sleep -Seconds 30
 #
 
 # Get created subscription  
-$Subscription = Get-AzSubscription -SubscriptionName $SubscriptionName
+
+$consistent = $false
+    $loops = 0
+
+    while (-not $consistent) {
+        $subscription = $null
+        try {
+            $Subscription = Get-AzSubscription -SubscriptionName $SubscriptionName
+        }
+        catch {
+            $subscription = $null
+            if ($loops -eq 30) {
+                throw "Took too long for subscription to become consistent."
+            }
+            Write-Output "Loop: $loops"
+            Start-Sleep -Seconds 1
+        }
+        if ($null -ne $subscription) {
+            $consistent = $true
+        }
+        $loops++
+    }
 
 # Move subscription to correlating Management Group for further bootstrapping (either using Enterprise Scale or Azure Bluepint)
 New-AzManagementGroupSubscription -GroupName $Environment -SubscriptionId $Subscription.Id
